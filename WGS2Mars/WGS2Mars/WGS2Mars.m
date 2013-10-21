@@ -8,6 +8,8 @@
 
 #import "WGS2Mars.h"
 
+NSData *offsetFileData = nil;
+
 typedef struct offset_data {
     int16_t lng;    //12151表示121.51
     int16_t lat;    //3130表示31.30
@@ -49,8 +51,11 @@ static int compare_offset_data(offset_data *data1, offset_data *data2){
 
 //WGS标准GPS转火星坐标系
 void WGS2Mars(double *lat, double *lng){
-    //使用文件－内存映射减少大文件内存消耗
-    NSData *offsetFileData = [NSData dataWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"offset" ofType:@"dat"] options:NSDataReadingMappedIfSafe error:NULL];
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        //使用文件－内存映射减少大文件内存消耗
+        offsetFileData = [NSData dataWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"offset" ofType:@"dat"] options:NSDataReadingMappedIfSafe error:NULL];
+    });
     const void *buf = [offsetFileData bytes]; //byte buf for content of file "offset.dat"
     long long buflen = [offsetFileData length]; //length of byte buf for content of file "offset.dat"
     offset_data search_data;
